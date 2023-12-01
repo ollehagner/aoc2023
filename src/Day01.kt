@@ -1,5 +1,19 @@
 import java.lang.IllegalArgumentException
 
+val wordNumbers = mapOf(
+    "one" to 1,
+    "two" to 2,
+    "three" to 3,
+    "four" to 4,
+    "five" to 5,
+    "six" to 6,
+    "seven" to 7,
+    "eight" to 8,
+    "nine" to 9
+)
+
+val wordNumbersReversed = wordNumbers.entries.associate { (key, value) -> key.reversed() to value }
+
 fun main() {
 
     val testInput = readInput("Day01_test_2")
@@ -16,13 +30,28 @@ fun part1(input: List<String>): Int {
 }
 
 fun part2(input: List<String>): Int {
-    return input
-        .map { textToDigits(it) }
-        .sumOf { "${firstDigit(it)}${firstDigit(it.reversed())}".toInt() }
+    return input.sumOf {
+        val firstNumber = firstDigit(it, wordNumbers)
+        val secondNumber = firstDigit(it.reversed(), wordNumbersReversed)
+        "$firstNumber$secondNumber".toInt()
+    }
 }
 
 fun firstDigit(line: String): Char {
     return line.first { it.isDigit() }
+}
+
+fun firstDigit(line: String, wordNumbers: Map<String, Int>): Int {
+    val numbersInTextRegex = ("^(" + wordNumbers.keys.joinToString("|") + ")").toRegex()
+    return line
+        .windowed(5, partialWindows = true)
+        .firstNotNullOf {
+            if (it.first().isDigit()) {
+                it.first().digitToInt()
+            } else {
+                numbersInTextRegex.find(it)?.let { matchResult -> wordNumbers[matchResult.groupValues.first()] }
+            }
+        }
 }
 
 fun textToDigits(line: String): String {
@@ -33,7 +62,7 @@ fun textToDigits(line: String): String {
             if (it.first().isDigit()) {
                 it.first()
             } else {
-                numbersInText.find(it)?.let { matchResult -> matchResult!!.groupValues.first().textToInt() }
+                numbersInText.find(it)?.let { matchResult -> matchResult.groupValues.first().textToInt() }
             }
         }
         .joinToString("")
