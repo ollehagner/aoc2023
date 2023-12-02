@@ -1,3 +1,7 @@
+package day01
+
+import common.println
+import common.readInput
 import java.lang.IllegalArgumentException
 
 val wordNumbers = mapOf(
@@ -16,8 +20,8 @@ val wordNumbersReversed = wordNumbers.entries.associate { (key, value) -> key.re
 
 fun main() {
 
-    val testInput = readInput("Day01_test_2")
-    val input = readInput("Day01")
+    val testInput = readInput("day01/testinput")
+    val input = readInput("day01/input")
     part1(input).println()
 
     part2(input).println()
