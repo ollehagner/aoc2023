@@ -22,16 +22,18 @@ fun part1(input: List<String>): Long {
 fun part2(input: List<String>): Long {
     val scratchCards = input
         .map(ScratchCard.Companion::parse)
-    val numOfCards = scratchCards.associate { it.id to 1L}.toMutableMap()
-    scratchCards
-        .forEach { scratchCard ->
-            val instancesOfCurrent = numOfCards.getOrDefault(scratchCard.id, 0)
+    val initialCardCount = scratchCards.associate { it.id to 1L}.toMutableMap()
+    return scratchCards
+        .fold(initialCardCount) { acc, scratchCard ->
+            val instancesOfCurrent = acc[scratchCard.id]
             repeat(scratchCard.matchingNumbers) { offset ->
                 val toUpdateIndex = scratchCard.id + offset + 1
-                numOfCards.merge(toUpdateIndex, instancesOfCurrent) { newValue, oldValue -> newValue + oldValue }
+                acc.merge(toUpdateIndex, instancesOfCurrent!!) { newValue, oldValue -> newValue + oldValue }
             }
+            acc
         }
-    return numOfCards.values.sum()
+        .values
+        .sum()
 }
 
 fun numbersToInts(numbersAsString: String): Set<Int> {
