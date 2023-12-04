@@ -27,9 +27,8 @@ fun part2(input: List<String>): Long {
         .forEach { scratchCard ->
             val instancesOfCurrent = numOfCards.getOrDefault(scratchCard.id, 0)
             repeat(scratchCard.matchingNumbers) { offset ->
-                val toUpdate = scratchCard.id + offset + 1
-                val instancesOfCardToAdd = numOfCards.getOrDefault(toUpdate, 0)
-                numOfCards[toUpdate] = instancesOfCurrent + instancesOfCardToAdd
+                val toUpdateIndex = scratchCard.id + offset + 1
+                numOfCards.merge(toUpdateIndex, instancesOfCurrent) { newValue, oldValue -> newValue + oldValue }
             }
         }
     return numOfCards.values.sum()
