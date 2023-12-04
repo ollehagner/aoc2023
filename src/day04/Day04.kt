@@ -26,9 +26,9 @@ fun part2(input: List<String>): Long {
     return scratchCards
         .fold(initialCardCount) { acc, scratchCard ->
             val instancesOfCurrent = acc[scratchCard.id]
-            repeat(scratchCard.matchingNumbers) { offset ->
-                val toUpdateIndex = scratchCard.id + offset + 1
-                acc.merge(toUpdateIndex, instancesOfCurrent!!) { newValue, oldValue -> newValue + oldValue }
+            repeat(scratchCard.matchingNumbers) { updateOffset ->
+                val toUpdateId = scratchCard.id + updateOffset + 1
+                acc.merge(toUpdateId, instancesOfCurrent!!) { newValue, oldValue -> newValue + oldValue }
             }
             acc
         }
@@ -40,7 +40,7 @@ fun numbersToInts(numbersAsString: String): Set<Int> {
     return numbersAsString.split("\\s+".toRegex()).map { it.toInt() }.toSet()
 }
 
-data class ScratchCard(val id: Int, val numbers: Set<Int>, val matchingNumbers: Int) {
+data class ScratchCard(val id: Int, val matchingNumbers: Int) {
 
     fun score(): Long {
         return 2L.pow(matchingNumbers - 1)
@@ -51,7 +51,7 @@ data class ScratchCard(val id: Int, val numbers: Set<Int>, val matchingNumbers: 
             val id = line.substringBefore(":").substringAfter("Card").trim().toInt()
             val numbers = numbersToInts(line.substringAfter(":").substringBefore("|").trim())
             val winningNumbers = numbersToInts(line.substringAfter(":").substringAfter("|").trim())
-            return ScratchCard(id - 1, numbers, numbers.intersect(winningNumbers).size)
+            return ScratchCard(id, numbers.intersect(winningNumbers).size)
         }
     }
 }
