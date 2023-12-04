@@ -5,26 +5,32 @@ import common.Point
 import common.println
 import common.readInput
 
-val EMPTY = '.'
-val GEAR = '*'
+const val EMPTY = '.'
+const val GEAR = '*'
 
 fun main() {
 
-    val testInput = readInput("day03/testinput")
+    val testInput = readInput("day03/Day03_sample")
         .map { it.toList() }
 
     val input = readInput("day03/input")
         .map { it.toList() }
 
-    part1(input).println()
-    part2(input).println()
+    part1(testInput).println()
+//    part2(input).println()
 
 }
 
 fun part1(input: List<List<Char>>): Int {
     val grid = Grid(input)
-    return findEngineParts(grid)
+    val foundParts = findEngineParts(grid)
+    foundParts
+        .groupingBy { it.enginePartNumber }.eachCount()
+        .toSortedMap()
+        .forEach{ (engineNumber, count) -> println("$engineNumber : $count")}
+    return foundParts
         .sumOf { verifiedEnginePart -> verifiedEnginePart.enginePartNumber }
+
 }
 
 fun part2(input: List<List<Char>>): Int {
