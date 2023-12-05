@@ -3,20 +3,26 @@ package day05
 import common.groupUntil
 import common.println
 import common.readInput
+import kotlin.time.measureTime
 
 fun main() {
     val input = readInput("day05/input")
     val testinput = readInput("day05/testinput")
     part1(input).println()
-//    part2(input).println()
+    part2(input).println()
 }
 
 fun part1(input: List<String>): Long {
     val seeds = input.first().substringAfter(": ").split(" ").map { it.trim().toLong() }
     val chain = createChain(input)
+    val mappers = parseMappers(input)
+    mappers.reversed().forEach {
+        it.println()
+        println()
+    }
 
     return seeds
-        .minOf { seed -> chain.endResult(seed) }
+        .minOf { seed -> chain.convert(seed) }
 }
 
 fun part2(input: List<String>): Long {
@@ -27,10 +33,13 @@ fun part2(input: List<String>): Long {
         .windowed(2, 2)
         .map { LongRange(it.first(), it.first() + it.last() - 1)}
     val chain = createChain(input)
-    return seeds.flatMap { it.toList() }
-        .minOf { chain.endResult(it) }
+    return seeds.minOf {
+        seed -> seed.minOf { chain.convert(it) }
+    }
 
 }
+
+
 
 fun createChain(input: List<String>): Converter {
     val mappers = parseMappers(input)
@@ -47,11 +56,7 @@ fun parseMappers(input: List<String>): List<Mapper> {
 }
 
 interface Converter {
-    fun convert(value: Long): List<Long>
-
-    fun endResult(value: Long): Long {
-        return convert(value).last()
-    }
+    fun convert(value: Long): Long
 
     companion object {
         fun from(mapper: Mapper): Converter {
@@ -66,20 +71,21 @@ interface Converter {
 
 class NodeConverter(private val mapper: Mapper, val next: Converter): Converter {
 
-    override fun convert(value: Long): List<Long> {
-        return listOf(value) + next.convert(mapper.get(value))
+    override fun convert(value: Long): Long {
+        return next.convert(mapper.get(value))
     }
 
 }
 
 class LeafConverter(private val mapper: Mapper): Converter {
-    override fun convert(from: Long): List<Long> {
-        return listOf(from, mapper.get(from))
+
+    override fun convert(from: Long): Long {
+        return mapper.get(from)
     }
 
 }
 
-class Mapper(private val mappings: Map<LongRange, Long>) {
+class Mapper(val mappings: Map<LongRange, Long>) {
     fun get(from: Long): Long {
         return mappings
             .filterKeys { it.contains(from) }
@@ -106,6 +112,4 @@ class Mapper(private val mappings: Map<LongRange, Long>) {
 
         }
     }
-
-
 }
