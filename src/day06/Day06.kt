@@ -15,42 +15,33 @@ fun main() {
 
 }
 
-/**
- * Time:        50748685
- * Distance:   242101716911252
- *
- *5330503 ska det vara och 45418182
- *
- */
-
 fun part1(races : List<RaceInfo>): Int {
     return races
         .map {
-            it.recordHoldTimes().count()
+            it.numOfPossibleRecordTimes()
         }
         .reduce { acc, value -> acc * value }
 }
 
 fun part2(race: RaceInfo): Int {
+    return race.numOfPossibleRecordTimes()
+}
 
+fun solveSecondDegreeEquation(race: RaceInfo): Pair<Long, Long> {
     val totalTime = BigDecimal(race.totalTime)
     val recordDistance = BigDecimal(race.recordDistance)
 
     val squareRootPart = (totalTime.pow(2) - recordDistance.multiply(BigDecimal(4))).sqrt(MathContext.DECIMAL128)
     val firstAnswer = totalTime.negate().plus(squareRootPart).div(BigDecimal(-2)).setScale(0, RoundingMode.UP).toLong()
     val secondAnswer = totalTime.negate().minus(squareRootPart).div(BigDecimal(-2)).setScale(0, RoundingMode.DOWN).toLong()
-
-    return (firstAnswer..secondAnswer).count()
+    return Pair(firstAnswer, secondAnswer)
 }
 
 data class RaceInfo(val totalTime: Long, val recordDistance: Long) {
 
-    fun recordHoldTimes(): List<Long> {
-        return (0..totalTime)
-            .map { elapsedTime ->
-                elapsedTime * (totalTime - elapsedTime)
-            }
-            .filter { it > recordDistance }
+    fun numOfPossibleRecordTimes(): Int {
+        return solveSecondDegreeEquation(this)
+            .let { (firstAnswer, secondAnswer) -> (firstAnswer..secondAnswer).count() }
     }
 
     companion object {
