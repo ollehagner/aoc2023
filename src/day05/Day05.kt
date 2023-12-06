@@ -3,7 +3,6 @@ package day05
 import common.groupUntil
 import common.println
 import common.readInput
-import kotlin.time.measureTime
 
 fun main() {
     val input = readInput("day05/input")
@@ -13,16 +12,9 @@ fun main() {
 }
 
 fun part1(input: List<String>): Long {
-    val seeds = input.first().substringAfter(": ").split(" ").map { it.trim().toLong() }
+    val seeds = input.first().substringAfter(": ").split(" ").map { LongRange(it.trim().toLong(), it.trim().toLong()) }
     val chain = createChain(input)
-    val mappers = parseMappers(input)
-    mappers.reversed().forEach {
-        it.println()
-        println()
-    }
-
-    return seeds
-        .minOf { seed -> chain.convert(seed) }
+    return chain.convert(seeds).minOf { it.first }
 }
 
 fun part2(input: List<String>): Long {
@@ -31,21 +23,17 @@ fun part2(input: List<String>): Long {
         .split(" ")
         .map { it.trim().toLong() }
         .windowed(2, 2)
-        .map { LongRange(it.first(), it.first() + it.last() - 1)}
+        .map { LongRange(it.first(), it.first() + it.last() - 1) }
     val chain = createChain(input)
-    return seeds.minOf {
-        seed -> seed.minOf { chain.convert(it) }
-    }
-
+    return chain.convert(seeds).minOf { it.first }
 }
 
 
-
-fun createChain(input: List<String>): Converter {
+fun createChain(input: List<String>): Stage {
     val mappers = parseMappers(input)
-    return parseMappers(input)
+    return mappers
         .drop(1)
-        .fold(Converter.from(mappers.first())) { next, mapper -> Converter.from(mapper, next) }
+        .fold(Stage.from(mappers.first())) { next, mapper -> Stage.from(mapper, next) }
 }
 
 fun parseMappers(input: List<String>): List<Mapper> {
@@ -55,42 +43,57 @@ fun parseMappers(input: List<String>): List<Mapper> {
         .map { Mapper.parse(it) }
 }
 
-interface Converter {
-    fun convert(value: Long): Long
+interface Stage {
+    fun convert(from: List<LongRange>): List<LongRange>
 
     companion object {
-        fun from(mapper: Mapper): Converter {
-            return LeafConverter(mapper)
+        fun from(mapper: Mapper): Stage {
+            return LeafStage(mapper)
         }
 
-        fun from(mapper: Mapper, next: Converter) : Converter {
-            return NodeConverter(mapper, next)
+        fun from(mapper: Mapper, next: Stage): Stage {
+            return NodeStage(mapper, next)
         }
     }
 }
 
-class NodeConverter(private val mapper: Mapper, val next: Converter): Converter {
+class NodeStage(private val mapper: Mapper, val next: Stage) : Stage {
 
-    override fun convert(value: Long): Long {
-        return next.convert(mapper.get(value))
+    override fun convert(from: List<LongRange>): List<LongRange> {
+        return next.convert(mapper.get(from))
     }
 
 }
 
-class LeafConverter(private val mapper: Mapper): Converter {
+class LeafStage(private val mapper: Mapper) : Stage {
 
-    override fun convert(from: Long): Long {
+    override fun convert(from: List<LongRange>): List<LongRange> {
         return mapper.get(from)
     }
-
 }
 
-class Mapper(val mappings: Map<LongRange, Long>) {
-    fun get(from: Long): Long {
-        return mappings
-            .filterKeys { it.contains(from) }
-            .firstNotNullOfOrNull { from + it.value } ?: from
+class Mapper(val mappings: Map<LongRange, LongRange>) {
 
+    fun get(from: List<LongRange>): List<LongRange> {
+        val lowerUnmapped = -1..<mappings.keys.minOf { it.first }
+        val upperUnmapped = mappings.keys.maxOf { it.last } + 1..Long.MAX_VALUE
+        return from.flatMap { range ->
+            val mapped = mappings
+                .filterKeys { source -> source.overlaps(range) }
+                .map { (source, destination) ->
+                    val start = maxOf(range.first, source.first)
+                    val end = minOf(range.last, source.last)
+                    val offset = destination.first - source.first
+                    LongRange(start + offset, end + offset)
+                }.toMutableList()
+            if(lowerUnmapped.overlaps(range)) {
+                mapped.add(range.first..minOf(range.last, lowerUnmapped.last))
+            }
+            if(upperUnmapped.overlaps(range)) {
+                mapped.add(maxOf(range.first, upperUnmapped.first)..range.last)
+            }
+            mapped
+        }
     }
 
     override fun toString(): String {
@@ -106,10 +109,13 @@ class Mapper(val mappings: Map<LongRange, Long>) {
                 .dropLast(1)
                 .map { line -> line.split(" ").map { it.trim().toLong() } }
                 .associate { (destination, source, length) ->
-                    LongRange(source, source + length - 1) to (destination - source)
+                    (source..<source + length) to (destination..<destination + length)
                 }
+                .toSortedMap(compareBy<LongRange> { it.first })
             return Mapper(mappings)
-
         }
     }
 }
+
+private infix fun LongRange.overlaps(other: LongRange): Boolean =
+    (first <= other.last && other.first <= last)
