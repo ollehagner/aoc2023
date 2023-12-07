@@ -42,11 +42,7 @@ fun solve(handsAndBids: List<Pair<Hand, Bid>>): Int {
 class Hand(private val cards: List<Card>) : Comparable<Hand> {
 
     private val comparator: Comparator<Hand> = compareBy<Hand> { it.bestHandWithJoker().points() }
-        .thenBy { it.cards[0].rank }
-        .thenBy { it.cards[1].rank }
-        .thenBy { it.cards[2].rank }
-        .thenBy { it.cards[3].rank }
-        .thenBy { it.cards[4].rank }
+        .thenBy { hand -> hand.cards.joinToString("") { Integer.toHexString(it.rank) }.toInt(16) }
 
     private fun points(): Int {
         val cardCount = cards.groupingBy { it }.eachCount().values
