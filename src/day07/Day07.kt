@@ -4,6 +4,7 @@ import common.println
 import common.readInput
 import day07.Card.*
 import java.lang.IllegalArgumentException
+typealias Bid = Int
 
 fun main() {
     val testinput = readInput("day07/testinput")
@@ -29,7 +30,7 @@ fun part2(input: List<String>): Int {
     return solve(parseInput(input, true))
 }
 
-fun solve(handsAndBids: List<Pair<Hand, Int>>): Int {
+fun solve(handsAndBids: List<Pair<Hand, Bid>>): Int {
     return handsAndBids
         .asSequence()
         .sortedBy { it.first }
