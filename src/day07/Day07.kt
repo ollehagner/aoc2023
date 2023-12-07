@@ -2,25 +2,36 @@ package day07
 
 import common.println
 import common.readInput
+import day07.Card.*
 import java.lang.IllegalArgumentException
 
 fun main() {
-    val testinput = parseInput(readInput("day07/testinput"))
+    val testinput = readInput("day07/testinput")
 
-
-    val input = parseInput(readInput("day07/input"))
+    val input = readInput("day07/input")
 
     part1(input).println()
+    part2(input).println()
+
 }
 
-fun parseInput(input: List<String>): List<Pair<Hand, Int>> {
+fun parseInput(input: List<String>, withJoker: Boolean = false): List<Pair<Hand, Int>> {
     return input
         .map { it.split(" ") }
-        .map { (hand, bid) -> Hand.parse(hand) to bid.toInt() }
+        .map { (hand, bid) -> Hand.parse(hand, withJoker) to bid.toInt() }
 }
 
-fun part1(handsAndBids: List<Pair<Hand, Int>>): Int {
+fun part1(input: List<String>): Int {
+    return solve(parseInput(input))
+}
+
+fun part2(input: List<String>): Int {
+    return solve(parseInput(input, true))
+}
+
+fun solve(handsAndBids: List<Pair<Hand, Int>>): Int {
     return handsAndBids
+        .asSequence()
         .sortedBy { it.first }
         .map { it.second }
         .mapIndexed { index, bid -> (index + 1) * bid }
@@ -29,7 +40,7 @@ fun part1(handsAndBids: List<Pair<Hand, Int>>): Int {
 
 class Hand(private val cards: List<Card>) : Comparable<Hand> {
 
-    private val comparator: Comparator<Hand> = compareBy<Hand> { it.points() }
+    private val comparator: Comparator<Hand> = compareBy<Hand> { it.bestHandWithJoker().points() }
         .thenBy { it.cards[0].rank }
         .thenBy { it.cards[1].rank }
         .thenBy { it.cards[2].rank }
@@ -49,6 +60,14 @@ class Hand(private val cards: List<Card>) : Comparable<Hand> {
         }
     }
 
+    private fun bestHandWithJoker(): Hand {
+        if(cards.all { it == JOKER }) return Hand(List(5) { ACE })
+        return cards.toSet()
+            .filter { it != JOKER }
+            .map { cardToReplaceWith -> Hand(cards.map { if(it == JOKER) cardToReplaceWith else it }) }
+            .maxByOrNull { it.points() }!!
+    }
+
     override fun compareTo(other: Hand): Int {
         return comparator.compare(this, other)
     }
@@ -58,8 +77,8 @@ class Hand(private val cards: List<Card>) : Comparable<Hand> {
     }
 
     companion object {
-        fun parse(cardsAsString: String): Hand {
-            return Hand(cardsAsString.map { Card.parse(it) })
+        fun parse(cardsAsString: String, withJoker: Boolean = false): Hand {
+            return Hand(cardsAsString.map { Card.parse(it, withJoker) })
         }
     }
 
@@ -78,11 +97,14 @@ enum class Card(val rank: Int, val char: Char) : Comparable<Card> {
     FIVE(4, '5'),
     FOUR(3, '4'),
     THREE(2, '3'),
-    TWO(1, '2');
+    TWO(1, '2'),
+    JOKER(0, 'J');
 
     companion object {
-        fun parse(char: Char): Card {
+        fun parse(char: Char, withJoker: Boolean = false): Card {
+
             return entries
+                .filter { if(withJoker) it != JACK else it != JOKER }
                 .find { it.char == char }
                 ?: throw IllegalArgumentException("Unknown char $char")
         }
@@ -91,6 +113,5 @@ enum class Card(val rank: Int, val char: Char) : Comparable<Card> {
     override fun toString(): String {
         return "$char"
     }
-
 
 }
