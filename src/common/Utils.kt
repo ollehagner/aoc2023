@@ -41,3 +41,9 @@ inline fun<R> List<R>.groupUntil(predicate: Predicate<R>): List<List<R>> {
         acc
     }
 }
+
+fun <T> infiniteSequence(value: T): Sequence<T> = sequence {
+    while(true) {
+        yield(value)
+    }
+}
