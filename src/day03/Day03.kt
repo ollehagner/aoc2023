@@ -10,14 +10,14 @@ const val GEAR = '*'
 
 fun main() {
 
-    val testInput = readInput("day03/Day03_sample")
+    val testInput = readInput("day03/testinput")
         .map { it.toList() }
 
     val input = readInput("day03/input")
         .map { it.toList() }
 
-    part1(testInput).println()
-//    part2(input).println()
+    part1(input).println()
+    part2(input).println()
 
 }
 
