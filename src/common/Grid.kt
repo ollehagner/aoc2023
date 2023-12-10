@@ -20,6 +20,16 @@ class Grid<T> {
         }
     }
 
+    constructor(rows: List<String>, mappingFunction: (char: Char) -> T? ) {
+        rows.flatMapIndexed { y, row ->
+            row.mapIndexedNotNull {  x, value ->
+                mappingFunction(value)?.let { value ->
+                    Point(x, y) to value
+                }
+            }
+        }.forEach { (point, value) -> data[point] = value }
+    }
+
     constructor(points: Collection<Point>, value: T) {
         points.forEach { data[it] = value }
     }
