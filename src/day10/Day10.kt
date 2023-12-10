@@ -11,27 +11,28 @@ fun main() {
 }
 
 fun part1(input: List<String>): Int {
-    val grid: Grid<Pipe> = Grid(input) { char -> Pipe.parse(char) }
-    val start = findStart(input)
-
-    val connectingToStart = grid
-        .entries()
-        .filter { (point, pipe) -> pipe.connections(point).contains(start) }
-        .map { it.key }
-
-    var current = connectingToStart.first()
-    var previous = start
-    var steps = 1
-    do {
-        var next = grid.valueOf(current).next(previous, current)
-        previous = current
-        current = next
-        steps++
-    } while(current != start)
-    return steps / 2
+    return pointsInLoop(input).size / 2
 }
 
+fun pointsInLoop(input: List<String>): Set<Point> {
+    val grid: Grid<Pipe> = Grid(input) { position, char -> Pipe.create(position, char) }
+    val start = findStart(input)
 
+    val pipesConnectingToStart = grid
+        .values()
+        .filter { pipe -> pipe.connections().contains(start) }
+
+    var current = pipesConnectingToStart.first().position
+    var previous = start
+    var pointsInLoop = mutableSetOf(previous)
+    do {
+        var next = grid.valueOf(current).next(previous)
+        pointsInLoop.add(current)
+        previous = current
+        current = next
+    } while(current != start)
+    return pointsInLoop
+}
 
 fun findStart(input: List<String>): Point {
     return input.flatMapIndexed { y, row ->
@@ -41,25 +42,25 @@ fun findStart(input: List<String>): Point {
     }.first()
 }
 
-data class Pipe(val directions: Set<Direction>) {
+data class Pipe(val position: Point, val directions: Set<Direction>) {
 
-    fun connections(position: Point): Set<Point> {
+    fun connections(): Set<Point> {
         return directions.map { direction -> position.move(direction) }.toSet()
     }
 
-    fun next(from: Point, position: Point): Point {
-        return (connections(position) - setOf(from)).first()
+    fun next(from: Point): Point {
+        return (connections() - setOf(from)).first()
     }
 
     companion object {
-        fun parse(char: Char): Pipe? {
+        fun create(position: Point, char: Char): Pipe? {
             return when(char) {
-                '|' -> Pipe(setOf(UP, DOWN))
-                '-' -> Pipe(setOf(LEFT, RIGHT))
-                'L' -> Pipe(setOf(DOWN, RIGHT))
-                'J' -> Pipe(setOf(DOWN, LEFT))
-                '7' -> Pipe(setOf(UP, LEFT))
-                'F' -> Pipe(setOf(UP, RIGHT))
+                '|' -> Pipe(position, setOf(UP, DOWN))
+                '-' -> Pipe(position, setOf(LEFT, RIGHT))
+                'L' -> Pipe(position, setOf(DOWN, RIGHT))
+                'J' -> Pipe(position, setOf(DOWN, LEFT))
+                '7' -> Pipe(position, setOf(UP, LEFT))
+                'F' -> Pipe(position, setOf(UP, RIGHT))
                 else -> null
             }
         }

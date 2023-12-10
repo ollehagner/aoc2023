@@ -20,10 +20,10 @@ class Grid<T> {
         }
     }
 
-    constructor(rows: List<String>, mappingFunction: (char: Char) -> T? ) {
+    constructor(rows: List<String>, mappingFunction: (point: Point, char: Char) -> T? ) {
         rows.flatMapIndexed { y, row ->
             row.mapIndexedNotNull {  x, value ->
-                mappingFunction(value)?.let { value ->
+                mappingFunction(Point(x, y), value)?.let { value ->
                     Point(x, y) to value
                 }
             }
