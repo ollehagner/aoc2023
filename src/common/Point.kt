@@ -36,6 +36,10 @@ data class Point(val x: Int, val y: Int) {
         return abs(this.x - other.x) + abs(this.y - other.y)
     }
 
+    fun directionToNeighbor(other: Point): Direction {
+        return Direction.entries.first { this.move(it) == other }
+    }
+
     fun neighbors(): Set<Point> {
         return IntRange(x - 1, x + 1).flatMap { xValue ->
             IntRange(y - 1, y + 1).map { yValue ->

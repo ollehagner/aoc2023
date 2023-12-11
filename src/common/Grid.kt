@@ -9,7 +9,8 @@ class Grid<T> {
 
     private val data = mutableMapOf<Point, T>()
 
-    constructor() {
+    constructor(contents: Map<Point, T>) {
+        data.putAll(contents)
     }
 
     constructor(values: List<List<T>>) {
@@ -123,6 +124,11 @@ class Grid<T> {
         val maxX = Optional.ofNullable(data.keys.map { it.x }.maxOf { it }).orElse(0)
         val maxY = Optional.ofNullable(data.keys.map { it.y }.maxOf { it }).orElse(0)
         return Point(maxX, maxY)
+    }
+
+    fun withinBounds(point: Point): Boolean {
+        return (min().x..max().x).contains(point.x) &&
+                (min().y..max().y).contains(point.y)
     }
 
     override fun toString(): String {
