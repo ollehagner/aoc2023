@@ -8,7 +8,7 @@ fun main() {
     val input = readInput("day13/input")
 
     part1(toPatterns(input)).println()
-//    part2(toPatterns(input)).println()
+    part2(toPatterns(input)).println()
 }
 
 fun toPatterns(input: List<String>): List<Array<CharArray>> {
@@ -19,23 +19,23 @@ fun toPatterns(input: List<String>): List<Array<CharArray>> {
 
 fun part1(patterns: List<Array<CharArray>>): Int {
     return patterns.sumOf { pattern ->
-        maxOf(findReflection(pattern, 100)?.first?: 0, findReflection(pattern.rotateClockwise())?.first ?: 0)
+        maxOf(findReflection(pattern, 100)?.value ?: 0, findReflection(pattern.rotateClockwise())?.value ?: 0)
     }
 }
 
-/*
-Svaret mellan 34141 och 58586
-
- */
 fun part2(patterns: List<Array<CharArray>>): Int {
     return patterns.sumOf { originalPattern ->
         val oldResult = listOfNotNull(findReflection(originalPattern, 100), findReflection(originalPattern.rotateClockwise()))
             .first()
         patternSequence(originalPattern)
             .firstNotNullOfOrNull { pattern ->
-                val result = listOfNotNull(findReflection(pattern, 100), findReflection(pattern.rotateClockwise()))
-                    .firstOrNull()
-                if(result?.second contentEquals oldResult.second) null else result?.first
+                val resultHorizontal = findReflectionPart2(pattern, 100)
+                val resultVertical = findReflectionPart2(pattern.rotateClockwise())
+
+                val totalResult = resultVertical + resultHorizontal
+                totalResult
+                    .filter { it != oldResult }
+                    .maxOfOrNull { it.value }
             } ?: 0
     }
 }
@@ -57,7 +57,7 @@ fun patternSequence(pattern: Array<CharArray>): Sequence<Array<CharArray>> {
     }
 }
 
-fun findReflection(pattern: Array<CharArray>, factor: Int = 1): Pair<Int, CharArray>? {
+fun findReflection(pattern: Array<CharArray>, factor: Int = 1): ReflectionLine? {
     val potentialReflections =
             pattern.asSequence().toList()
                 .windowed(2)
@@ -75,10 +75,51 @@ fun findReflection(pattern: Array<CharArray>, factor: Int = 1): Pair<Int, CharAr
                     firstRow contentEquals secondRow
                 }
         }
-        .map { Pair(it * factor, pattern[it]) }
-        .firstOrNull()
+        .map { ReflectionLine(it * factor, pattern[it]) }
+        .maxByOrNull { it.value }
 }
 
+fun findReflectionPart2(pattern: Array<CharArray>, factor: Int = 1): List<ReflectionLine> {
+    val potentialReflections =
+        pattern.asSequence().toList()
+            .windowed(2)
+            .mapIndexed { index, (firstRow, secondRow) ->
+                index to (firstRow contentEquals  secondRow)
+            }
+            .filter { it.second }
+            .map { it.first }.toList()
 
+    return potentialReflections
+        .map { index -> index + 1 }
+        .filter { pivot ->
+            pattern.take(pivot).reversed().zip(pattern.drop(pivot))
+                .all { (firstRow, secondRow) ->
+                    firstRow contentEquals secondRow
+                }
+        }
+        .map { ReflectionLine(it * factor, pattern[it]) }
+
+}
+
+data class ReflectionLine(val value: Int, val line: CharArray) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ReflectionLine
+
+        if (value != other.value) return false
+        if (!line.contentEquals(other.line)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = value
+        result = 31 * result + line.contentHashCode()
+        return result
+    }
+
+}
 
 
