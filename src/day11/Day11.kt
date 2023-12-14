@@ -97,9 +97,6 @@ fun Array<CharArray>.columns(): Array<CharArray> {
     }.toTypedArray()
 }
 
-fun printMatrix(matrix: Array<CharArray>) {
-    println(matrix.joinToString(System.lineSeparator()) { row -> row.joinToString(" ") })
-}
 
 
 
