@@ -9,6 +9,8 @@ class Grid<T> {
 
     private val data = mutableMapOf<Point, T>()
 
+    constructor()
+
     constructor(contents: Map<Point, T>) {
         data.putAll(contents)
     }
