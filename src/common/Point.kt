@@ -1,5 +1,6 @@
 package common
 
+import common.Direction.*
 import kotlin.math.abs
 
 data class Point(val x: Int, val y: Int) {
@@ -46,6 +47,10 @@ data class Point(val x: Int, val y: Int) {
                 Point(xValue, yValue) }
             }
             .toSet() - this
+    }
+
+    fun cardinalNeighbors(): Set<Point> {
+        return listOf(UP, DOWN, LEFT, RIGHT).map { move(it) }.toSet()
     }
 
     override fun toString(): String {
