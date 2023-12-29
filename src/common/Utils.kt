@@ -51,3 +51,7 @@ fun <T> infiniteSequence(value: T): Sequence<T> = sequence {
 fun Array<CharArray>.printMatrix() {
     println(joinToString(System.lineSeparator()) { row -> row.joinToString(" ") })
 }
+
+fun LongRange.intersect(other: LongRange): LongRange {
+    return maxOf(first, other.first)..minOf(last, other.last)
+}
