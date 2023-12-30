@@ -1,6 +1,7 @@
 package day08
 
 import common.infiniteSequence
+import common.leastCommonMultiple
 import common.println
 import common.readInput
 import java.lang.IllegalArgumentException
@@ -68,13 +69,7 @@ fun greatestCommonDivisor(first: Long, second: Long): Long {
     return greatestCommonDivisor(min, max - min)
 }
 
-fun leastCommonMultiple(values: List<Long>): Long {
-    if(values.size == 1) return values.first()
 
-    val remaining = values.drop(2)
-    val leastCommonMultiple = values[0] * (values[1] / greatestCommonDivisor(values[0], values[1]))
-    return leastCommonMultiple(remaining + listOf(leastCommonMultiple))
-}
 
 
 

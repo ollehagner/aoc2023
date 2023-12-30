@@ -1,5 +1,6 @@
 package common
 
+import day08.greatestCommonDivisor
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.*
@@ -54,4 +55,12 @@ fun Array<CharArray>.printMatrix() {
 
 fun LongRange.intersect(other: LongRange): LongRange {
     return maxOf(first, other.first)..minOf(last, other.last)
+}
+
+fun leastCommonMultiple(values: List<Long>): Long {
+    if(values.size == 1) return values.first()
+
+    val remaining = values.drop(2)
+    val leastCommonMultiple = values[0] * (values[1] / greatestCommonDivisor(values[0], values[1]))
+    return leastCommonMultiple(remaining + listOf(leastCommonMultiple))
 }

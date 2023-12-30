@@ -1,5 +1,6 @@
 package day20
 
+import common.leastCommonMultiple
 import common.println
 import common.readInput
 import day20.FlipFlopModule.State.OFF
@@ -8,13 +9,51 @@ import day20.Pulse.LOW
 import java.util.LinkedList
 
 fun main() {
-    val router = Router()
     val testinput = readInput("day20/testinput")
     val input = readInput("day20/input")
-    part1(input, router).println()
+    part1(input).println()
+    part2(input).println()
 }
 
-fun part1(input: List<String>, router: Router): Int {
+fun part1(input: List<String>): Int {
+    val router = Router()
+    val modules = createModules(input, router)
+
+    repeat(1000) {
+        runIteration(modules, router)
+    }
+    return router.lowPulses * router.highPulses
+}
+
+fun part2(input: List<String>): Long {
+
+    return listOf("hn", "tg", "lz", "kh")
+        .map { iterationsUntil(input) { message -> message.pulse == HIGH && message.sender == it } }
+        .toList().let { leastCommonMultiple(it) }
+
+}
+
+fun iterationsUntil(input: List<String>, endExpression : (message: Message) -> Boolean): Long {
+    val router = Router(endExpression)
+    val modules = createModules(input, router)
+    var iterations = 0L
+    while(!router.wantedState) {
+        runIteration(modules, router)
+        iterations++
+    }
+    return iterations
+}
+
+fun runIteration(modules: List<Module>, router: Router) {
+    var sequenceNumber = 0L
+    router.sendTo("broadcaster", Message("button", LOW, sequenceNumber))
+    while(modules.any { it.hasMessages() }) {
+        modules.forEach { it.process(sequenceNumber) }
+        sequenceNumber++
+    }
+}
+
+fun createModules(input: List<String>, router: Router): List<Module> {
     val modules = input.map { Module.parse(it, router) }
     modules.forEach { module ->
         modules
@@ -23,28 +62,23 @@ fun part1(input: List<String>, router: Router): Int {
             .forEach { module.addSource(it) }
 
     }
-
-    repeat(1000) {
-        var sequenceNumber = 0L
-        router.sendTo("broadcaster", Message("button", LOW, sequenceNumber))
-        while(modules.any { it.hasMessages() }) {
-            modules.forEach { it.process(sequenceNumber) }
-            sequenceNumber++
-        }
-    }
-    return router.lowPulses * router.highPulses
+    return modules
 }
 
-class Router {
+class Router(val wantedStateExpr: (message: Message) -> Boolean = { _ -> false }) {
     var destinations = mutableMapOf<String, Module>()
     var lowPulses = 0
     var highPulses = 0
+    var wantedState = false
 
     fun add(module: Module) {
         destinations[module.id()] = module
     }
 
     fun sendTo(moduleId: String, message: Message) {
+        if(wantedStateExpr(message)) {
+            wantedState = true
+        }
         if(message.pulse == LOW) lowPulses++ else highPulses++
         if(destinations.contains(moduleId)) {
             destinations[moduleId]!!.receive(message)
@@ -178,7 +212,7 @@ class ConjunctionModule(val id: String, val destinations: List<String>, val rout
     }
 
     private val received = mutableMapOf<String, Pulse>()
-    private val queue = LinkedList<Message>()
+    val queue = LinkedList<Message>()
 
     override fun id(): String {
         return id
