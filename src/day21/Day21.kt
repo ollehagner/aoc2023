@@ -1,11 +1,7 @@
 package day21
 
-import common.Point
-import common.printMatrix
-import common.println
-import common.readInput
+import common.*
 
-const val ROCK = '#'
 const val GARDEN = '.'
 const val VALID = '0'
 const val INVALID = 'X'
@@ -13,7 +9,8 @@ const val INVALID = 'X'
 fun main() {
     val testinput = readInput("day21/testinput")
     val input = readInput("day21/input")
-    part1(testinput, 10).println()
+    part1(input, 10).println()
+    part2(input, 26501365).println()
 }
 
 fun part1(input: List<String>, maxSteps: Int): Int {
@@ -35,8 +32,51 @@ fun part1(input: List<String>, maxSteps: Int): Int {
         nextPoints
             .forEach { toExplore.add(it) }
     }
-//    grid.printMatrix()
     return grid.sumOf { chars -> chars.count { it == VALID } }
+}
+
+
+fun part2(input: List<String>, maxSteps: Int): Long {
+
+
+    val grid = input.map { row -> row.toCharArray() }.toTypedArray()
+    val start = grid.indices.flatMap { y ->
+        grid[0].indices.map { x ->
+            Point(x, y)
+        }
+    }.first { grid.get(it) == 'S' }
+
+    val toExplore = mutableListOf(Pair(start, 0))
+    val visited = mutableMapOf<Point, Int>()
+    grid.set(start, GARDEN)
+    
+    visited[start] = 0
+    while(toExplore.isNotEmpty() && toExplore.any { it.second <= maxSteps }) {
+        val current = toExplore.removeFirst()
+        val nextPoints = current.first.cardinalNeighbors()
+            .filter { !visited.contains(it) }
+            .filter { grid.isValid(it) }
+            .map { Pair(it, current.second + 1) }
+        nextPoints.forEach { visited[it.first] = it.second }
+        nextPoints
+            .forEach { toExplore.add(it) }
+    }
+    val even = visited.values.count { it.mod(2) == 0 }
+    val evenCorners = visited.values.count { it.mod(2) == 0 && it > 65 }
+    val odd = visited.values.count { it.mod(2) != 0 }
+    val oddCorners = visited.values.count { it.mod(2) != 0 && it > 65 }
+
+    val n = (maxSteps.toLong() - start.x) / grid.size
+    val noOfEvenBlocks: Long = n * n
+    val noOfOddBlocks: Long = (n + 1) * (n + 1)
+    return (odd * noOfOddBlocks) + (even * noOfEvenBlocks) - ((n + 1) * oddCorners) + (n * evenCorners)
+
+}
+
+fun Array<CharArray>.getInfinite(point: Point): Char {
+    val x = point.x.mod(this[0].size)
+    val y = point.y.mod(this.size)
+    return this[y][x]
 }
 
 fun Array<CharArray>.get(point: Point): Char {
