@@ -49,7 +49,7 @@ fun part2(input: List<String>, maxSteps: Int): Long {
     val toExplore = mutableListOf(Pair(start, 0))
     val visited = mutableMapOf<Point, Int>()
     grid.set(start, GARDEN)
-    
+1
     visited[start] = 0
     while(toExplore.isNotEmpty() && toExplore.any { it.second <= maxSteps }) {
         val current = toExplore.removeFirst()
